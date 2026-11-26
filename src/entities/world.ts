@@ -252,14 +252,10 @@ export function stepWorld(
     }
   }
 
-  // 1. 切換主控貓與待命模式
+  // 1. 切換主控貓與待命模式（保留夥伴待命狀態，不強迫解除踩板分工）
   if (input.justPressed.switchCat) {
     world.activeCatId = world.activeCatId === 'orange' ? 'black' : 'orange';
     world.switchGraceTimer = SWITCH_GRACE_DURATION;
-    if (world.partnerMode === 'STAY') {
-      // 切到原本待命的貓時，自動讓新夥伴進入跟隨或保持由玩家決定：解除原待命貓鎖定
-      world.partnerMode = 'FOLLOW';
-    }
     const nowActive = world.cats[world.activeCatId];
     world.switchRipple = {
       timer: sec(0.32),
@@ -289,7 +285,13 @@ export function stepWorld(
 
   const activeCat = world.cats[world.activeCatId];
   const partnerCat = world.cats[world.activeCatId === 'orange' ? 'black' : 'orange'];
-  const bossBounds = world.boss && world.boss.status === 'active' ? world.boss.arenaBounds : undefined;
+  // Boss 擊敗後立即解除競技場封鎖（P0-1 修復）
+  const bossBounds =
+    world.boss &&
+    world.boss.status === 'active' &&
+    world.boss.behavior.kind !== 'DEFEATED'
+      ? world.boss.arenaBounds
+      : undefined;
 
   // 3. 步進主控貓與夥伴貓
   const controls = extractPlayerControls(input);
@@ -320,7 +322,8 @@ export function stepWorld(
     bossBounds,
   );
 
-  // 4. 步進機關（含水閥淋水暈眩 Boss）
+  // 4. 步進機關（含橘貓推箱意圖與水閥淋水暈眩 Boss）
+  const orangePushIntentX: -1 | 0 | 1 = world.activeCatId === 'orange' ? controls.moveX : 0;
   stepMechanics(
     world.level,
     world.mechanics,
@@ -332,6 +335,7 @@ export function stepWorld(
         stunBoss(world.boss, sec(2.5), events);
       }
     },
+    orangePushIntentX,
   );
 
   // 5. 深坑判定（主控貓）

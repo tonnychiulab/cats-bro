@@ -70,14 +70,19 @@ function bootstrap(): void {
     syncMuteLabel();
   };
 
-  btnMute?.addEventListener('click', toggleMute);
-  btnHideHint?.addEventListener('click', () => {
+  btnMute?.addEventListener('click', (e) => {
+    toggleMute();
+    (e.currentTarget as HTMLButtonElement).blur();
+  });
+  btnHideHint?.addEventListener('click', (e) => {
     hintBar?.classList.add('hidden');
     btnShowHint?.classList.add('visible');
+    (e.currentTarget as HTMLButtonElement).blur();
   });
-  btnShowHint?.addEventListener('click', () => {
+  btnShowHint?.addEventListener('click', (e) => {
     hintBar?.classList.remove('hidden');
     btnShowHint?.classList.remove('visible');
+    (e.currentTarget as HTMLButtonElement).blur();
   });
 
   const startLevelByIndex = (idx: number): void => {
@@ -164,9 +169,14 @@ function bootstrap(): void {
           audio.playSfx('switch');
         } else if (r.id.startsWith('level_')) {
           const idx = Number(r.id.slice(6));
-          if (Number.isInteger(idx)) {
+          if (Number.isInteger(idx) && idx >= 0 && idx < ALL_LEVELS.length) {
             selectedLevelIndex = idx;
             startLevelByIndex(idx);
+          }
+        } else if (r.id === 'dialogue_continue' && world && world.scene.kind === 'DIALOGUE') {
+          if (world.scene.minLockTimer <= 0) {
+            world.scene = { kind: 'PLAYING' };
+            inputCtrl.clearJumpBuffer();
           }
         } else if (r.id.startsWith('pause_')) {
           handlePauseConfirm(r.id.slice(6) as PauseOption);
@@ -192,7 +202,7 @@ function bootstrap(): void {
   let accumulator = 0;
 
   const loop = (now: number): void => {
-    const rawDt = Math.min(0.05, (now - lastTs) / 1000);
+    const rawDt = Math.max(0, Math.min(0.05, (now - lastTs) / 1000));
     lastTs = now;
     accumulator += rawDt;
 
@@ -220,6 +230,12 @@ function bootstrap(): void {
         } else if (input.justPressed.left) {
           selectedLevelIndex = (selectedLevelIndex + ALL_LEVELS.length - 1) % ALL_LEVELS.length;
           audio.playSfx('switch');
+        } else if (input.justPressed.down) {
+          selectedLevelIndex = (selectedLevelIndex + 3) % ALL_LEVELS.length;
+          audio.playSfx('switch');
+        } else if (input.justPressed.up) {
+          selectedLevelIndex = (selectedLevelIndex + ALL_LEVELS.length - 3) % ALL_LEVELS.length;
+          audio.playSfx('switch');
         } else if (input.justPressed.confirm) {
           const unlocked =
             save.allUnlockedPreview || selectedLevelIndex <= save.unlockedLevelIndex;
@@ -236,11 +252,11 @@ function bootstrap(): void {
         } else if (world.scene.kind === 'PAUSED') {
           if (input.justPressed.pause) {
             world.scene = { kind: 'PLAYING' };
-          } else if (input.justPressed.right || input.justPressed.jump) {
+          } else if (input.justPressed.down || input.justPressed.right) {
             pauseIdx = (pauseIdx + 1) % PAUSE_OPTIONS.length;
             world.scene = { kind: 'PAUSED', selectedOption: PAUSE_OPTIONS[pauseIdx]! };
             audio.playSfx('switch');
-          } else if (input.justPressed.left) {
+          } else if (input.justPressed.up || input.justPressed.left) {
             pauseIdx = (pauseIdx + PAUSE_OPTIONS.length - 1) % PAUSE_OPTIONS.length;
             world.scene = { kind: 'PAUSED', selectedOption: PAUSE_OPTIONS[pauseIdx]! };
             audio.playSfx('switch');
@@ -265,8 +281,10 @@ function bootstrap(): void {
             inputCtrl.clearJumpBuffer();
           }
           consumeEvents(events);
+          if (world.scene.kind === 'PLAYING' || world.scene.kind === 'RESPAWN') {
+            worldRenderer.updateEffects(dt);
+          }
         }
-        worldRenderer.updateEffects(dt);
       }
     }
 

@@ -5,6 +5,8 @@ export const JUMP_BUFFER_DURATION = sec(0.1);
 const ALL_ACTIONS: readonly InputAction[] = [
   'left',
   'right',
+  'up',
+  'down',
   'jump',
   'skill',
   'switchCat',
@@ -19,9 +21,11 @@ const KEY_TO_ACTIONS: Record<string, readonly InputAction[]> = {
   KeyA: ['left'],
   ArrowRight: ['right'],
   KeyD: ['right'],
+  ArrowUp: ['up', 'jump'],
+  KeyW: ['up', 'jump'],
+  ArrowDown: ['down'],
+  KeyS: ['down'],
   Space: ['jump', 'confirm'],
-  ArrowUp: ['jump'],
-  KeyW: ['jump'],
   KeyZ: ['jump'],
   KeyJ: ['skill'],
   KeyX: ['skill'],
@@ -66,7 +70,7 @@ export class KeyboardInputController {
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     const actions = KEY_TO_ACTIONS[e.code];
     if (!actions) return;
-    if (e.code === 'Space' || e.code === 'Tab' || e.code.startsWith('Arrow')) {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Tab' || e.code.startsWith('Arrow')) {
       e.preventDefault();
     }
     const isFresh = !this.pressedCodes.has(e.code);

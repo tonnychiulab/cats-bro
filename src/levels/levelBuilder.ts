@@ -32,6 +32,7 @@ export type RawMechanic =
       row: number;
       heightTiles: number;
       requiredTriggerIds: string[];
+      openOnAnyTrigger?: boolean;
       bottomGapPx: number;
     }
   | {
@@ -248,6 +249,7 @@ export function parseLevel(raw: LevelRawSpec): LevelData {
             h: px(m.heightTiles * TILE_SIZE),
           },
           requiredTriggerIds: m.requiredTriggerIds.map(triggerId),
+          openOnAnyTrigger: m.openOnAnyTrigger,
           bottomGapPx: px(m.bottomGapPx),
         };
       case 'movingPlatform':
@@ -335,6 +337,35 @@ export function parseLevel(raw: LevelRawSpec): LevelData {
         y: px(raw.bossSpawnTile.row * TILE_SIZE - 6),
       }
     : undefined;
+
+  // 靜態不變量校驗（INV-LVL-02 / INV-LVL-03）：起點、機關不與實心磚重疊，3-3 必含 Boss 與水閥
+  const isSolid = (t: TileType) => t === 1 || t === 3 || t === 5;
+  const assertNotInSolid = (label: string, x: number, y: number) => {
+    const c = Math.floor(x / TILE_SIZE);
+    const r = Math.floor(y / TILE_SIZE);
+    if (isSolid(tiles[r]?.[c] ?? 0)) {
+      throw new Error(`Level ${raw.id}: ${label} overlaps solid tile at (${c}, ${r})`);
+    }
+  };
+  assertNotInSolid('spawnOrange', spawnOrange.x, spawnOrange.y);
+  assertNotInSolid('spawnBlack', spawnBlack.x, spawnBlack.y);
+  for (const m of mechanics) {
+    if (m.kind === 'gate' || m.kind === 'crate' || m.kind === 'pushBox') {
+      const c = Math.floor((m.rect.x + m.rect.w / 2) / TILE_SIZE);
+      const rTop = Math.floor((m.rect.y + 2) / TILE_SIZE);
+      const rBot = Math.floor((m.rect.y + m.rect.h - 2) / TILE_SIZE);
+      for (let r = rTop; r <= rBot; r++) {
+        if (isSolid(tiles[r]?.[c] ?? 0)) {
+          throw new Error(`Level ${raw.id}: mechanic ${m.id} overlaps solid tile at (${c}, ${r})`);
+        }
+      }
+    }
+  }
+  if (raw.bossEncounter === 'battle') {
+    if (!bossArena || !bossSpawn || !mechanics.some((m) => m.kind === 'waterValve')) {
+      throw new Error(`Level ${raw.id}: battle level must define bossArena, bossSpawn, and waterValve`);
+    }
+  }
 
   return {
     id: raw.id,

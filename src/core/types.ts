@@ -33,6 +33,8 @@ export type Facing = 1 | -1;
 export type InputAction =
   | 'left'
   | 'right'
+  | 'up'
+  | 'down'
   | 'jump'
   | 'skill'
   | 'switchCat'
@@ -209,6 +211,7 @@ export type BossBadCatState =
       facing: Facing;
       hp: 0 | 1 | 2 | 3;
       behavior: BossBehavior;
+      projectileSeq: number;
       readonly arenaBounds: Rect;
       readonly spawnPos: Vec2;
     };
@@ -261,6 +264,7 @@ export type MechanicSpec =
       readonly id: EntityId;
       readonly rect: Rect;
       readonly requiredTriggerIds: readonly TriggerId[];
+      readonly openOnAnyTrigger?: boolean;
       readonly bottomGapPx: Px;
     }
   | {

@@ -360,4 +360,48 @@ describe('《橘黑兄弟：九命歸途》SDD / CONTRACTS v2.1 驗收測試矩�
     const moveRes = moveAndCollide(lvl11, [], px(32), px(120), px(14), px(14), 0, 100, DT);
     expect(moveRes.y).toBeGreaterThanOrEqual(120);
   });
+
+  it('C-10 (Code Review P0 回歸): 橘貓走路推箱、Boss 撞牆暈眩、3-3 擊敗 Boss 後可自由走向家門 G', () => {
+    // 1. 橘貓普通行走（無需 smash）即可推動 pushBox
+    const w12 = createWorld(getLevelById('1-2'), createDefaultSave());
+    const box = w12.mechanics.find((m) => m.spec.kind === 'pushBox')!;
+    const boxStartX = box.rect.x;
+    w12.cats.orange.x = px(box.rect.x - CAT_CONFIG.orange.width);
+    w12.cats.orange.y = box.rect.y;
+    w12.cats.orange.facing = 1;
+    for (let i = 0; i < 15; i++) {
+      const inp = createEmptyInput();
+      inp.held.right = true;
+      stepWorld(w12, inp, DT);
+    }
+    expect(box.rect.x).toBeGreaterThan(boxStartX + 4);
+
+    // 2. Boss 衝爪撞上競技場牆壁確實觸發 STUNNED
+    const lvl33 = getLevelById('3-3');
+    const w33 = createWorld(lvl33, createDefaultSave());
+    const activeBoss = activateBoss(w33.boss!);
+    w33.boss = activeBoss;
+    activeBoss.x = px(activeBoss.arenaBounds.x + 8);
+    activeBoss.y = px(110);
+    activeBoss.vx = -200;
+    activeBoss.facing = -1;
+    activeBoss.behavior = { kind: 'CLAW_DASH', remaining: sec(0.9), dashesLeft: 1 };
+    const evs: WorldEvent[] = [];
+    for (let i = 0; i < 15; i++) {
+      stepBossBadCat(activeBoss, lvl33, w33.mechanics, w33.cats.orange, w33.cats.orange, w33.projectiles, DT, evs);
+      const kind: string = activeBoss.behavior.kind;
+      if (kind === 'STUNNED') break;
+    }
+    expect(activeBoss.behavior.kind).toBe('STUNNED');
+
+    // 3. 擊敗 Boss 後解除 bossBounds，雙貓可走出競技場抵達 3-3 家門 G 並通關
+    activeBoss.hp = 0;
+    activeBoss.behavior = { kind: 'DEFEATED' };
+    w33.cats.orange.x = lvl33.goal.x;
+    w33.cats.orange.y = px(lvl33.goal.y + 16);
+    w33.cats.black.x = lvl33.goal.x;
+    w33.cats.black.y = px(lvl33.goal.y + 16);
+    stepWorld(w33, createEmptyInput(), DT);
+    expect(w33.scene.kind).toBe('LEVEL_CLEAR');
+  });
 });

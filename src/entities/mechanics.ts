@@ -59,6 +59,7 @@ export function stepMechanics(
   dt: Seconds,
   events: WorldEvent[],
   onWaterValveTriggered?: () => void,
+  orangePushIntentX: -1 | 0 | 1 = 0,
 ): void {
   const activeTriggers = new Set<TriggerId>();
 
@@ -103,20 +104,21 @@ export function stepMechanics(
           cRect.x + cRect.w <= m.rect.x + 5 &&
           cRect.y + cRect.h > m.rect.y + 2 &&
           cRect.y < m.rect.y + m.rect.h - 2 &&
-          cat.vx >= 0 &&
           cat.facing === 1;
         const touchLeft =
           cRect.x <= m.rect.x + m.rect.w + 2 &&
           cRect.x >= m.rect.x + m.rect.w - 5 &&
           cRect.y + cRect.h > m.rect.y + 2 &&
           cRect.y < m.rect.y + m.rect.h - 2 &&
-          cat.vx <= 0 &&
           cat.facing === -1;
 
-        if (touchRight && (Math.abs(cat.vx) > 5 || isCatSmashing(cat))) {
-          pushVx = isCatSmashing(cat) ? 80 : 48;
-        } else if (touchLeft && (Math.abs(cat.vx) > 5 || isCatSmashing(cat))) {
-          pushVx = isCatSmashing(cat) ? -80 : -48;
+        const pushingRight = orangePushIntentX === 1 || cat.vx > 5 || isCatSmashing(cat);
+        const pushingLeft = orangePushIntentX === -1 || cat.vx < -5 || isCatSmashing(cat);
+
+        if (touchRight && pushingRight) {
+          pushVx = isCatSmashing(cat) ? 84 : 52;
+        } else if (touchLeft && pushingLeft) {
+          pushVx = isCatSmashing(cat) ? -84 : -52;
         }
       }
 
@@ -195,12 +197,14 @@ export function stepMechanics(
     }
   }
 
-  // 3. 鐵捲門（多 TriggerId 聯動）
+  // 3. 鐵捲門（支援全部滿足或任一滿足）
   for (const m of mechanics) {
     if (m.spec.kind !== 'gate') continue;
     const wasOpen = m.active;
-    const allMet = m.spec.requiredTriggerIds.every((id) => activeTriggers.has(id));
-    m.active = allMet;
+    const isOpen = m.spec.openOnAnyTrigger
+      ? m.spec.requiredTriggerIds.some((id) => activeTriggers.has(id))
+      : m.spec.requiredTriggerIds.every((id) => activeTriggers.has(id));
+    m.active = isOpen;
     if (m.active && !wasOpen) {
       events.push({ type: 'sfx', id: 'switch' });
       events.push({ type: 'particle', kind: 'dust', x: m.rect.x, y: m.rect.y });

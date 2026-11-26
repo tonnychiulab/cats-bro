@@ -30,10 +30,8 @@
     }
     #canvas-stack {
       position: relative;
-      width: 960px;
-      height: 540px;
-      max-width: 96vw;
-      max-height: calc(100vh - 54px);
+      width: min(960px, 96vw, calc((100vh - 54px) * 16 / 9));
+      height: auto;
       aspect-ratio: 16 / 9;
       border: 3px solid #3c3454;
       box-shadow: 0 0 0 2px #161224, 0 14px 40px rgba(0, 0, 0, 0.72);

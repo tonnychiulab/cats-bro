@@ -337,20 +337,29 @@ export class UiOverlayRenderer {
 
     ctx.fillStyle = '#fff5e4';
     ctx.font = `500 18px ${FONT}`;
-    // 簡易換行
-    const maxChars = 36;
-    if (text.length <= maxChars) {
-      ctx.fillText(text, 116, 444);
-    } else {
-      ctx.fillText(text.slice(0, maxChars), 116, 440);
-      ctx.fillText(text.slice(maxChars), 116, 468);
+    // 動態依寬度折行（最多 3 行，防長文溢出）
+    const maxWidth = 720;
+    const lines: string[] = [];
+    let current = '';
+    for (const ch of text) {
+      if (ctx.measureText(current + ch).width > maxWidth && current.length > 0) {
+        lines.push(current);
+        current = ch;
+      } else {
+        current += ch;
+      }
     }
+    if (current) lines.push(current);
+    lines.slice(0, 3).forEach((line, idx) => {
+      ctx.fillText(line, 116, 438 + idx * 24);
+    });
 
     if (canContinue) {
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffe278';
       ctx.font = `600 14px ${FONT}`;
-      ctx.fillText('按 Enter / Space 繼續 ▶', 846, 492);
+      ctx.fillText('按 Enter / Space 或點擊繼續 ▶', 846, 494);
+      this.clickableRegions.push({ id: 'dialogue_continue', x: 90, y: 372, w: 780, h: 134 });
     }
   }
 

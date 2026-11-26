@@ -52,15 +52,15 @@ export const LEVEL_2_2: LevelData = parseLevel({
     '...........................|.....F..F...........................',
     '.............F..F..........|....======.........=======..........',
     '...........................|....................................',
-    '.....F.....................|....................................',
-    '..B..O....H...........F....|..C...............F..............G..',
+    '.....F..........................................................',
+    '..B..O....H...........F.......C...............F..............G..',
     '##############......#############......#########################',
     '##############......#############......#########################',
   ],
   mechanics: [
     // 移動攤車（自動往返）
     { kind: 'movingPlatform', id: 'p2_2_cart1', col: 14, row: 8, widthTiles: 3, endCol: 18, endRow: 8, speed: 32 },
-    // 黑貓攀牆啟動高處霓虹總開關，驅動升降梯載橘貓上高架棚
+    // 黑貓攀牆啟動高處霓虹總開關，驅動升降梯載橘貓上高架棚；底部 row 7..8 留通道防卡死
     { kind: 'trigger', id: 't2_2_power', col: 26, row: 3, activation: 'wallSwitch', latched: true },
     { kind: 'movingPlatform', id: 'p2_2_lift', col: 34, row: 8, widthTiles: 3, endCol: 34, endRow: 5, speed: 36, requiredTriggerIds: ['t2_2_power'] },
     { kind: 'hazard', id: 'h2_2_steam', style: 'steam', col: 47, row: 7, period: 3.0, activeDuration: 0.9, warnDuration: 0.6, phaseOffset: 0.5 },
@@ -95,10 +95,10 @@ export const LEVEL_2_3: LevelData = parseLevel({
   mechanics: [
     { kind: 'spring', id: 's2_3_awning', col: 13, row: 8, launchVy: -310 },
     { kind: 'hazard', id: 'h2_3_steam1', style: 'steam', col: 23, row: 7, period: 2.8, activeDuration: 0.9, warnDuration: 0.6, phaseOffset: 0 },
-    // 雙重連環壓板（橘貓推箱壓第一板＋自己踩第二板開啟拱門鐵閘）
+    // 雙重連環壓板（兩塊皆 latched: true，推箱壓 p1＋橘貓踩 p2 後拱門永久升起不卡死）
     { kind: 'pushBox', id: 'b2_3_box', col: 30, row: 8 },
-    { kind: 'trigger', id: 't2_3_p1', col: 34, row: 8, activation: 'weight2', latched: false },
-    { kind: 'trigger', id: 't2_3_p2', col: 38, row: 8, activation: 'weight2', latched: false },
+    { kind: 'trigger', id: 't2_3_p1', col: 34, row: 8, activation: 'weight2', latched: true },
+    { kind: 'trigger', id: 't2_3_p2', col: 38, row: 8, activation: 'weight2', latched: true },
     { kind: 'gate', id: 'g2_3_arch', col: 41, row: 5, heightTiles: 4, requiredTriggerIds: ['t2_3_p1', 't2_3_p2'], bottomGapPx: 12 },
     { kind: 'crate', id: 'c2_3_crate', col: 46, row: 8 },
   ],

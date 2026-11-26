@@ -16,8 +16,6 @@ import {
 } from '../core/types';
 import { getCatRect, isCatSmashing } from './cat';
 
-let projectileSeq = 0;
-
 export function createDormantBoss(level: LevelData): BossBadCatState | null {
   if (level.bossEncounter !== 'battle' || !level.bossArena || !level.bossSpawn) {
     return null;
@@ -45,6 +43,7 @@ export function activateBoss(boss: BossBadCatState): ActiveBossState {
     facing: -1,
     hp: BOSS_MAX_HP,
     behavior: { kind: 'IDLE', remaining: sec(1.0) },
+    projectileSeq: 0,
     arenaBounds: boss.arenaBounds,
     spawnPos: boss.spawnPos,
   };
@@ -161,22 +160,16 @@ export function stepBossBadCat(
     }
   } else if (b.kind === 'CLAW_DASH') {
     const rem = b.remaining - dt;
-    const hitLeftWall = boss.x <= arena.x + 4 && boss.vx < 0;
-    const hitRightWall = boss.x + boss.w >= arena.x + arena.w - 4 && boss.vx > 0;
-    if (hitLeftWall || hitRightWall) {
-      // 撞上水塔牆壁進入暈眩！
-      stunBoss(boss, sec(2.2), events);
-      boss.vx = -boss.facing * 40;
-      boss.vy = -80;
-    } else if (rem <= 0) {
+    if (rem <= 0) {
       if (b.dashesLeft > 1) {
         boss.behavior = {
           kind: 'CALL_LIGHTNING',
           remaining: sec(0.9),
           strikeX: activeCat.x,
         };
+        boss.projectileSeq += 1;
         projectiles.push({
-          id: entityId(`boss_bolt_${++projectileSeq}`),
+          id: entityId(`boss_bolt_${boss.projectileSeq}`),
           kind: 'bossLightning',
           x: activeCat.x,
           y: arena.y,
@@ -195,8 +188,8 @@ export function stepBossBadCat(
     }
   } else if (b.kind === 'JUMP_PERCH') {
     const dx = b.targetPos.x - boss.x;
-    boss.vx = Math.max(-130, Math.min(130, dx * 3));
-    if (Math.abs(dx) < 12 && boss.y <= b.targetPos.y + 18) {
+    boss.vx = Math.max(-155, Math.min(155, dx * 3.2));
+    if (Math.abs(dx) < 16 && boss.y <= b.targetPos.y + 22) {
       boss.vx = 0;
       boss.vy = 0;
       boss.facing = -1;
@@ -213,8 +206,9 @@ export function stepBossBadCat(
     const rem = b.remaining - dt;
     if (rem <= 0) {
       if (b.cansRemaining > 0) {
+        boss.projectileSeq += 1;
         projectiles.push({
-          id: entityId(`fish_can_${++projectileSeq}`),
+          id: entityId(`fish_can_${boss.projectileSeq}`),
           kind: 'fishCan',
           x: px(boss.x),
           y: px(boss.y + 6),
@@ -288,6 +282,22 @@ export function stepBossBadCat(
     boss.y = res.y;
     boss.vx = res.vx;
     boss.vy = res.vy;
+
+    // 衝爪撞上競技場水塔牆壁 → 立即觸發暈眩！（P0-2 修復）
+    if (boss.behavior.kind === 'CLAW_DASH' && res.hitWallDir !== 0) {
+      stunBoss(boss, sec(2.2), events);
+      boss.vx = -res.hitWallDir * 45;
+      boss.vy = -85;
+    }
+
+    // Phase 2 跳上高台若中途落地且未達目標高度 → 助跑後再次起跳防發呆卡死
+    if (
+      boss.behavior.kind === 'JUMP_PERCH' &&
+      res.grounded &&
+      boss.y > boss.behavior.targetPos.y + 22
+    ) {
+      boss.vy = -270;
+    }
   }
 
   // 4. 接觸傷害判定（STUNNED / HURT / DEFEATED 不傷人）

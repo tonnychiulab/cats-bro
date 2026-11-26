@@ -167,7 +167,10 @@ export function stepCatPhysics(
     const targetVx = controls.moveX * cfg.moveSpeed * speedMult;
     if (controls.moveX !== 0) {
       cat.facing = controls.moveX;
-      const accel = cat.onSlippery && !cfg.windImmune ? cfg.groundAccel * 0.45 : cfg.groundAccel;
+      const accel =
+        cat.onSlippery && cfg.slipperyDecel < cfg.groundDecel
+          ? cfg.groundAccel * 0.45
+          : cfg.groundAccel;
       if (cat.vx < targetVx) {
         cat.vx = Math.min(targetVx, cat.vx + accel * dt);
       } else if (cat.vx > targetVx) {
@@ -265,7 +268,9 @@ export function stepCatPhysics(
 
   if (cat.grounded) {
     cat.coyoteTimer = sec(COYOTE_DURATION);
-    cat.lastSafePos = { x: cat.x, y: cat.y };
+    if (!res.onMovingPlatform) {
+      cat.lastSafePos = { x: cat.x, y: cat.y };
+    }
     if (cat.id === 'black') {
       cat.doubleJumpAvailable = true;
       cat.wallSlideDir = 0;

@@ -65,7 +65,7 @@ export function loadSave(customStorage?: StorageLike): SaveDataV1 {
     if (obj.bestScores && typeof obj.bestScores === 'object') {
       for (const [k, v] of Object.entries(obj.bestScores as Record<string, unknown>)) {
         if (VALID_LEVEL_SET.has(k) && typeof v === 'number' && Number.isFinite(v) && v >= 0) {
-          bestScores[k as LevelId] = Math.floor(v);
+          bestScores[k as LevelId] = Math.min(999_999_999, Math.floor(v));
         }
       }
     }
@@ -73,12 +73,12 @@ export function loadSave(customStorage?: StorageLike): SaveDataV1 {
     return {
       version: 1,
       unlockedLevelIndex: unlocked,
-      allUnlockedPreview: Boolean(obj.allUnlockedPreview),
+      allUnlockedPreview: obj.allUnlockedPreview === true,
       clearedLevels: sanitizeLevelIds(obj.clearedLevels),
       collectedYarns: sanitizeLevelIds(obj.collectedYarns),
-      heroBonded: Boolean(obj.heroBonded),
+      heroBonded: obj.heroBonded === true,
       bestScores,
-      muted: Boolean(obj.muted),
+      muted: obj.muted === true,
     };
   } catch {
     return createDefaultSave();

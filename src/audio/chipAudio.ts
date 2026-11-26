@@ -71,6 +71,16 @@ export class ChipAudioEngine {
   private stepIndex = 0;
   private timerId: number | null = null;
   private muted = false;
+  private visibilityBound = false;
+
+  private readonly onVisibilityChange = (): void => {
+    if (!this.ctx) return;
+    if (document.hidden) {
+      void this.ctx.suspend();
+    } else if (!this.muted) {
+      void this.ctx.resume();
+    }
+  };
 
   public unlock(): void {
     if (typeof window === 'undefined') return;
@@ -79,12 +89,28 @@ export class ChipAudioEngine {
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
       this.noiseBuffer = this.createNoiseBuffer(this.ctx);
+      if (typeof document !== 'undefined' && !this.visibilityBound) {
+        document.addEventListener('visibilitychange', this.onVisibilityChange);
+        this.visibilityBound = true;
+      }
     }
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx.state === 'suspended' && !this.muted) {
       void this.ctx.resume();
     }
     if (this.currentTrack && this.timerId === null) {
       this.startSequencer(this.currentTrack);
+    }
+  }
+
+  public destroy(): void {
+    this.stopBgm();
+    if (typeof document !== 'undefined' && this.visibilityBound) {
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+      this.visibilityBound = false;
+    }
+    if (this.ctx) {
+      void this.ctx.close();
+      this.ctx = null;
     }
   }
 
@@ -247,6 +273,10 @@ export class ChipAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.0008, start + dur);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
     osc.start(start);
     osc.stop(start + dur + 0.01);
   }
@@ -273,6 +303,11 @@ export class ChipAudioEngine {
     src.connect(filter);
     filter.connect(gain);
     gain.connect(this.ctx.destination);
+    src.onended = () => {
+      src.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
     src.start(start);
     src.stop(start + dur + 0.01);
   }

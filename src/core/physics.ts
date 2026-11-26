@@ -65,6 +65,7 @@ export interface MoveResult {
   vx: number;
   vy: number;
   grounded: boolean;
+  onMovingPlatform: boolean;
   onSlippery: boolean;
   inPuddle: boolean;
   hitWallDir: -1 | 0 | 1;
@@ -170,6 +171,7 @@ export function moveAndCollide(
   const prevBottom = ny + h;
   ny = ny + nvy * dt;
   let grounded = false;
+  let onMovingPlatform = false;
   let onSlippery = false;
 
   const leftColY = Math.floor((nx + 1) / TILE_SIZE);
@@ -231,6 +233,7 @@ export function moveAndCollide(
       ny = plat.y - h;
       nvy = 0;
       grounded = true;
+      onMovingPlatform = true;
     }
   }
 
@@ -248,6 +251,7 @@ export function moveAndCollide(
     vx: nvx,
     vy: nvy,
     grounded,
+    onMovingPlatform,
     onSlippery,
     inPuddle,
     hitWallDir,
