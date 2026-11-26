@@ -179,7 +179,7 @@ export class UiOverlayRenderer {
         ctx.font = `600 12px ${FONT}`;
         const statusText = !unlocked
           ? '尚未解鎖'
-          : `${cleared ? '★ 已通關' : '可挑戰'}   ${hasYarn ? '🧶 已收毛線球' : '○ 毛線球未得'}`;
+          : `${cleared ? '★ 已通關' : '可挑戰'}   ${hasYarn ? '● 已收毛線球' : '○ 毛線球未得'}`;
         ctx.fillText(statusText, x + 14, y + 76);
 
         if (unlocked) {
@@ -224,7 +224,7 @@ export class UiOverlayRenderer {
       ctx.fillStyle = '#fff3db';
       ctx.textAlign = 'center';
       ctx.font = `700 11px ${FONT}`;
-      ctx.fillText(world.heroRescueUsedInLevel ? '阿福已救援' : '🐕 阿福守護', rx + 44, ry + 14);
+      ctx.fillText(world.heroRescueUsedInLevel ? '阿福已救援' : '★ 阿福守護', rx + 44, ry + 14);
     }
 
     // 主控貓資訊＋技能體力條＋夥伴模式
@@ -261,7 +261,7 @@ export class UiOverlayRenderer {
     ctx.font = `600 13px ${FONT}`;
     const fishProgress = world.fishBank % FISH_PER_EXTRA_LIFE;
     ctx.fillText(
-      `🐟 ${world.fishBank} (${fishProgress}/10補命)   🧶 ${world.yarnCollectedInLevel ? '1/1' : '0/1'}`,
+      `魚乾 ${world.fishBank} (${fishProgress}/10補命)  ｜  毛線球 ${world.yarnCollectedInLevel ? '1/1' : '0/1'}`,
       934,
       58,
     );
@@ -402,7 +402,7 @@ export class UiOverlayRenderer {
     ctx.font = `600 18px ${FONT}`;
     ctx.fillText(`本關得分：${world.score}   ·   剩餘命數：${world.lives} / 9`, UI_W / 2, 224);
     ctx.fillText(
-      `本關毛線球：${world.yarnCollectedInLevel ? '🧶 已入手！' : '尚未取得'}   ·   總毛線球：${save.collectedYarns.length} / 9`,
+      `本關毛線球：${world.yarnCollectedInLevel ? '★ 已入手！' : '尚未取得'}   ·   總毛線球：${save.collectedYarns.length} / 9`,
       UI_W / 2,
       262,
     );
