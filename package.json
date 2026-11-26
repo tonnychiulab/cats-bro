@@ -1,0 +1,19 @@
+{
+  "name": "cats-bro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "《橘黑兄弟：九命歸途》16-bit 復古像素風格網頁橫向捲軸雙貓動作解謎遊戲",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>橘黑兄弟：九命歸途 — Orange & Black Bros: Nine Lives Home (16-bit)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0d0c16;
+      color: #f4ebd9;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", monospace;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    #stage-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #canvas-stack {
+      position: relative;
+      width: 960px;
+      height: 540px;
+      max-width: 96vw;
+      max-height: calc(100vh - 54px);
+      aspect-ratio: 16 / 9;
+      border: 3px solid #3c3454;
+      box-shadow: 0 0 0 2px #161224, 0 14px 40px rgba(0, 0, 0, 0.72);
+      background: #14111f;
+    }
+    #game-canvas, #ui-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #game-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #ui-canvas {
+      pointer-events: auto;
+    }
+    #hint-bar {
+      width: 960px;
+      max-width: 96vw;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 12px;
+      background: #1a162b;
+      border: 2px solid #3c3454;
+      font-size: 12px;
+      color: #d7cde8;
+      letter-spacing: 0.3px;
+    }
+    #hint-bar.hidden { display: none; }
+    .hint-keys { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      border: 1px solid #6b5e8c;
+      background: #282240;
+      color: #ffe28a;
+      font-weight: 700;
+      border-radius: 2px;
+      margin-right: 3px;
+    }
+    .bar-btn {
+      background: #282240;
+      color: #f4ebd9;
+      border: 1px solid #6b5e8c;
+      padding: 3px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .bar-btn:hover { background: #3b325c; color: #ffe28a; }
+    #toggle-hint-floating {
+      position: fixed;
+      right: 12px;
+      bottom: 10px;
+      display: none;
+    }
+    #toggle-hint-floating.visible { display: inline-block; }
+  </style>
+</head>
+<body>
+  <div id="stage-wrap">
+    <div id="canvas-stack">
+      <canvas id="game-canvas" width="320" height="180"></canvas>
+      <canvas id="ui-canvas" width="960" height="540"></canvas>
+    </div>
+    <div id="hint-bar">
+      <div class="hint-keys">
+        <span><span class="kbd">A/D</span>或<span class="kbd">←/→</span>移動</span>
+        <span><span class="kbd">Space/W/Z</span>跳躍</span>
+        <span><span class="kbd">J/X/Shift</span>專屬技能</span>
+        <span><span class="kbd">Q/Tab/C</span>換貓</span>
+        <span><span class="kbd">E/K</span>跟隨/待命</span>
+        <span><span class="kbd">P/Esc</span>暫停</span>
+        <span><span class="kbd">M</span>靜音</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button id="btn-mute" class="bar-btn" type="button">音效：開</button>
+        <button id="btn-hide-hint" class="bar-btn" type="button">隱藏提示</button>
+      </div>
+    </div>
+  </div>
+  <button id="toggle-hint-floating" class="bar-btn" type="button">顯示操作列</button>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
